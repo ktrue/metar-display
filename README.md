@@ -4,12 +4,8 @@ This package of scripts is designed for standalone (outside the [Saratoga AJAX/P
 
 It uses two of the built-in functions from the template set:  
   **get-metar-conditions-inc.php**  
-  ** include-metar-display.php**  
+  **include-metar-display.php**  
 so to have easy maintenance for future releases of those two scripts, it is strongly recommended you **not** modify them. All needed customization can be performed in the **metar-display.php** script.
-
-## Sample output
-
-<img src="sample-output.png" alt="Sample output">
 
 ## Settings inside metar-display.php sample page
 
@@ -100,8 +96,8 @@ $SITE['uomDistance'] = ' mi'; // =' mi' or =' km'
 <dt>**$SITE['uomTemp']**</dt>
 
 <dd>This specifies the units for temperature display. Valid values are:  
-='&deg;C' for Centigrade (will also cause cloud heights to display in meters)  
-='&deg:F' for Fahrenheit (will also cause cloud heights to display in feet and temperatures in both F and C)</dd>
+='\&amp;deg;C' for Centigrade (will also cause cloud heights to display in meters)  
+='&amp;deg;F' for Fahrenheit (will also cause cloud heights to display in feet and temperatures in both F and C)</dd>
 
 <dt>**$SITE['uomBaro']**</dt>
 
@@ -128,3 +124,7 @@ $SITE['uomDistance'] = ' mi'; // =' mi' or =' km'
 =' mi' for miles. (will result in dual mi and km displays)</dd>
 
 </dl>
+
+# Sample output
+
+<img src="sample-output.png" alt="Sample output">
