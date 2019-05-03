@@ -71,11 +71,11 @@ $SITE['uomDistance'] = ' mi'; // =' mi' or =' km'
 
 <dt>**$SITE['tz']**</dt>
 
-<dd>This specifies the valid PHP timezone to use. Visit [http://us.php.net/manual/en/timezones.php](http://us.php.net/manual/en/timezones.php) for the proper value for your timezone.</dd>
+<dd>This specifies the valid PHP timezone to use. Visit <a href="https://us.php.net/manual/en/timezones.php">https://us.php.net/manual/en/timezones.php</a> for the proper value for your timezone.</dd>
 
 <dt>**$SITE['timeFormat']**</dt>
 
-<dd>This specifies the output format for the times displayed. Use the PHP [date format descriptors](http://us.php.net/manual/en/function.date.php) to change this.</dd>
+<dd>This specifies the output format for the times displayed. Use the PHP <a href="https://us.php.net/manual/en/function.date.php">date format descriptors</a> to change this.</dd>
 
 <dt>**$SITE['latitude']**</dt>
 
