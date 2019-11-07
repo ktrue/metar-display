@@ -67,7 +67,7 @@ $SITE['uomDistance'] = ' mi'; // =' mi' or =' km'
 
 <dt>**$MetarList = array( ... );**</dt>
 
-<dd>This array of elements controls which METAR sites will be displayed. Generate this list from the **[find-metar](/wxtemplates/find-metar.php)** utility and copy the customized output to replace the contents of the sample above.</dd>
+<dd>This array of elements controls which METAR sites will be displayed. Generate this list from the find-metar  https://saratoga-weather.org/wxtemplates/find-metar.php utility and copy the customized output to replace the contents of the sample above.</dd>
 
 <dt>**$maxAge**</dt>
 
