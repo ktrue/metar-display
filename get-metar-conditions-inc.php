@@ -71,10 +71,11 @@ Version 1.14 - 23-May-2016 - chg source to tgftp.nws.noaa.gov/data from weather.
 Version 1.15 - 25-Nov-2016 - fix visibility nnnnNDV/NCD decoding
 Version 1.16 - 11-Oct-2017 - use curl for fetch, fix fractional visibility km calc
 Version 1.17 - 30-Nov-2018 - https for tgftp.nws.noaa.gov site, minor Notice errata fixes
+Version 1.18 - 07-Nov-2019 - allow optional use of api.weather.gov/stations/{ICAO]/observations/latest data
 
 */
 global $Debug, $GMCVersion;
-$GMCVersion = 'get-metar-conditions-inc.php - Version 1.17 - 30-Nov-2018';
+$GMCVersion = 'get-metar-conditions-inc.php - Version 1.18 - 07-Nov-2019';
 //error_reporting(E_ALL);
 //ini_set('display_errors',1);
 if (isset($_REQUEST['sce']) && (strtolower($_REQUEST['sce']) == 'view' or strtolower($_REQUEST['sce']) == 'show')) {
@@ -97,7 +98,8 @@ if (isset($_REQUEST['sce']) && (strtolower($_REQUEST['sce']) == 'view' or strtol
 // local settings
 
 $cacheFileDir = './'; // default cache file directory
-global $cacheFileDir;
+$useMetarAPI = false;  // =true; use api.weather.gov source; =false; use tgftp.nws.noaa.gov source
+global $cacheFileDir,$useMetarAPI;
 
 // ------------ override from Settings.php --------------------
 
@@ -105,6 +107,9 @@ global $SITE;
 
 if (isset($SITE['cacheFileDir'])) {
   $cacheFileDir = $SITE['cacheFileDir'];
+}
+if (isset($SITE['useMetarAPI'])) {
+	$useMetarAPI = $SITE['useMetarAPI'];
 }
 
 // ------------ end override from Settings.php ----------------
@@ -115,7 +120,7 @@ if (isset($SITE['cacheFileDir'])) {
 function mtr_conditions($icao, $curtime = '', $sunrise = '', $sunset = '', $useJpgIcon = false, $UOM = '&deg;F,mph,inHg,in')
 {
   global $lang, $Debug, $mtrInfo, $metarPtr, $group, $GMCVersion;
-  global $Icons, $IconsLarge, $IconsText, $cacheFileDir, $Conditions;
+  global $Icons, $IconsLarge, $IconsText, $cacheFileDir, $Conditions,$useMetarAPI;
   $metarCacheName = $cacheFileDir . "metarcache-$icao.txt";
   $metarRefetchSeconds = 600; // fetch every 10 minutes
 	$Conditions = array();
@@ -142,9 +147,15 @@ function mtr_conditions($icao, $curtime = '', $sunrise = '', $sunset = '', $useJ
 
   if (isset($icao) and strlen($icao) == 4) {
     $Debug.= "<!-- mtr_conditions using METAR ICAO='$icao' -->\n";
-    $host = 'tgftp.nws.noaa.gov';
-    $path = '/data/observations/metar/stations/';
-    $metarURL = 'https://' . $host . $path . $icao . '.TXT';
+		if($useMetarAPI) {
+			$host = 'api.weather.gov';
+			$path = '/stations/%s/observations/latest';
+      $metarURL = 'https://' . $host . '/stations/' . $icao . '/observations/latest';
+		} else {
+      $host = 'tgftp.nws.noaa.gov';
+      $path = '/data/observations/metar/stations/';
+      $metarURL = 'https://' . $host . $path . $icao . '.TXT';
+		}
     $html = '';
     $raw = '';
 
@@ -177,7 +188,9 @@ function mtr_conditions($icao, $curtime = '', $sunrise = '', $sunset = '', $useJ
         $Debug.= "<!-- mtr_conditions returns RC='" . $RC . "' for ICAO/METAR='$icao' -->\n";
         return $t;
       }
-
+      if($useMetarAPI) {
+				$content = mtr_get_JSON_rawmetar($content);
+			}
       $html = $content;
       $fp = fopen($metarCacheName, "w");
       if ($fp) {
@@ -268,6 +281,33 @@ function mtr_conditions($icao, $curtime = '', $sunrise = '', $sunset = '', $useJ
   } // end of ICAO processing
   $Debug.= "<!-- mtr_conditions returns '" . $t[0] . "' iconnumber='" . $t[1] . "' img='" . $t[2] . "' comment='" . $t[3] . "' -->\n";
   return $t;
+}
+
+// ------------------------------------------------------------
+// get raw metar content from one API reqest and return as string
+
+function mtr_get_JSON_rawmetar($content) {
+	
+	$JSON = json_decode($content,true);
+	$raw = '';
+	$ts  = '';
+/*
+        "timestamp": "2019-11-07T16:53:00+00:00",
+        "rawMessage": "KSJC 071653Z 00000KT 1 1/2SM BR FEW001 BKN003 OVC005 11/10 A3013 RMK AO2 SLP202 T01110100",
+*/
+	if(isset($JSON['properties']['rawMessage'])) {
+		$raw = $JSON['properties']['rawMessage'];
+	}
+	if(isset($JSON['properties']['timestamp'])) {
+    $ts = $JSON['properties']['timestamp'];
+	}
+/* need:
+
+2019/11/07 17:53
+KSJC 071753Z 08003KT 1 1/2SM BR FEW001 BKN005 OVC007 12/10 A3014 RMK AO2 SLP206 T01220100 10122 20111 51019
+*/
+  $out = "\n".str_replace('-','/',substr($ts,0,10)).' '.substr($ts,11,5)."\n".$raw."\n";
+	return $out;
 }
 
 // ------------------------------------------------------------

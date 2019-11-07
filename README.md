@@ -7,6 +7,14 @@ It uses two of the built-in functions from the template set:
   **include-metar-display.php**  
 so to have easy maintenance for future releases of those two scripts, it is strongly recommended you **not** modify them. All needed customization can be performed in the **metar-display.php** script.
 
+Version 1.18 of the script offers a choice of data source for the raw METAR.  The default source is **tgftp.nws.noaa.gov** for the most current data.  An alternate source from **api.weather.gov** may be used, but is likely to have more 'stale' data than the **tgftp.nws.noaa.gov** primary service.  Enable the alternate source in get-metar-conditions-inc.php by:
+
+```$useMetarAPI = true;```
+
+or in a Settings.php (Saratoga template) by:
+
+ ```$SITE['useMetarAPI'] = true;```
+
 ## Settings inside metar-display.php sample page
 
 ```
