@@ -72,10 +72,11 @@ Version 1.15 - 25-Nov-2016 - fix visibility nnnnNDV/NCD decoding
 Version 1.16 - 11-Oct-2017 - use curl for fetch, fix fractional visibility km calc
 Version 1.17 - 30-Nov-2018 - https for tgftp.nws.noaa.gov site, minor Notice errata fixes
 Version 1.18 - 07-Nov-2019 - allow optional use of api.weather.gov/stations/{ICAO]/observations/latest data
+Version 1.19 - 01-Feb-2021 - corrected code for Ice Pellets from 'PE' to 'PL' (thanks to Jim of somdweather.com)
 
 */
 global $Debug, $GMCVersion;
-$GMCVersion = 'get-metar-conditions-inc.php - Version 1.18 - 07-Nov-2019';
+$GMCVersion = 'get-metar-conditions-inc.php - Version 1.19 - 01-Feb-2021';
 //error_reporting(E_ALL);
 //ini_set('display_errors',1);
 if (isset($_REQUEST['sce']) && (strtolower($_REQUEST['sce']) == 'view' or strtolower($_REQUEST['sce']) == 'show')) {
@@ -1137,7 +1138,7 @@ function mtr_get_conditions($part)
     'SN' => 'Snow',
     'SG' => 'Snow Grains',
     'IC' => 'Ice Crystals',
-    'PE' => 'Ice Pellets',
+    'PL' => 'Ice Pellets',
     'GR' => 'Hail',
     'GS' => 'Small Hail', // and/or snow pellets
     'UP' => '', // leave 'Unknown' out of the conditions .. reads better :)
@@ -1154,7 +1155,7 @@ function mtr_get_conditions($part)
     'FC' => 'Funnel Cloud, Tornado, or Waterspout',
     'SS' => 'Sandstorm/Duststorm'
   );
-  if (preg_match('/^(-|\+|VC)?(TS|SH|FZ|BL|DR|MI|BC|PR|RA|DZ|SN|SG|GR|GS|PE|IC|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$/', $part, $pieces)) {
+  if (preg_match('/^(-|\+|VC)?(TS|SH|FZ|BL|DR|MI|BC|PR|RA|DZ|SN|SG|GR|GS|PL|IC|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$/', $part, $pieces)) {
     $Debug.= "<!-- mtr_get_conditions part='$part' -->\n";
     $join = (strlen($conditions) == 0) ? '' : ', '; // append conditions with a ', ' between
     if (substr($part, 0, 1) == '-') {
