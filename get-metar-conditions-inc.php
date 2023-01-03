@@ -74,10 +74,11 @@ Version 1.17 - 30-Nov-2018 - https for tgftp.nws.noaa.gov site, minor Notice err
 Version 1.18 - 07-Nov-2019 - allow optional use of api.weather.gov/stations/{ICAO]/observations/latest data
 Version 1.19 - 01-Feb-2021 - corrected code for Ice Pellets from 'PE' to 'PL' (thanks to Jim of somdweather.com)
 Version 1.20 - 27-Dec-2022 - fixes for PHP 8.2
+Version 1,21 - 03-Jan-2023 - revert to ${varname} inside preg_replace replacement strings (thanks dwhitemv)
 
 */
 global $Debug, $GMCVersion;
-$GMCVersion = 'get-metar-conditions-inc.php - Version 1.20 - 27-Dec-2022';
+$GMCVersion = 'get-metar-conditions-inc.php - Version 1.21 - 03-Jan-2023';
 //error_reporting(E_ALL);
 //ini_set('display_errors',1);
 if (isset($_REQUEST['sce']) && (strtolower($_REQUEST['sce']) == 'view' or strtolower($_REQUEST['sce']) == 'show')) {
@@ -228,13 +229,13 @@ function mtr_conditions($icao, $curtime = '', $sunrise = '', $sunset = '', $useJ
     $metar = preg_replace('| / |is', ' ', $metar); // remove strange standalone slashes
     $metar = preg_replace('| \s+|is', ' ', $metar); // remove multiple spaces
     $metar = preg_replace('| COR |i', ' ', $metar); // remove COR (correction) from raw metar
-    $metar = preg_replace('|(\d{5}) KT|i', '{$1}KT', $metar); // fix any space in wind value
+    $metar = preg_replace('|(\d{5}) KT|i', '${1}KT', $metar); // fix any space in wind value
     $metar = preg_replace('| 999 |', ' 9999 ', $metar); // fix malformed unlimited visibility
     $metar = preg_replace('| LRA |', ' -RA ', $metar); // fix malformed light rain
     $metar = preg_replace('| HRA |', ' +RA ', $metar); // fix malformed light rain
 
-    // $metar = preg_replace('| (\d)SM|i',' 0{$1}SM',$metar); // fix malformed visibility to two digits
-    // $metar = preg_replace('| (\d+) (\d+)/(\d+)SM |i',' $1_$2/{$3}SM ',$metar); // fix NOAA visibility
+    // $metar = preg_replace('| (\d)SM|i',' 0${1}SM',$metar); // fix malformed visibility to two digits
+    // $metar = preg_replace('| (\d+) (\d+)/(\d+)SM |i',' $1_$2/${3}SM ',$metar); // fix NOAA visibility
 
     mtr_process($metar, $icao); // actually parse the metar for conditions.. results in $mtrInfo array
 
