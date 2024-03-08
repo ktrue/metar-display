@@ -74,11 +74,12 @@ Version 1.17 - 30-Nov-2018 - https for tgftp.nws.noaa.gov site, minor Notice err
 Version 1.18 - 07-Nov-2019 - allow optional use of api.weather.gov/stations/{ICAO]/observations/latest data
 Version 1.19 - 01-Feb-2021 - corrected code for Ice Pellets from 'PE' to 'PL' (thanks to Jim of somdweather.com)
 Version 1.20 - 27-Dec-2022 - fixes for PHP 8.2
-Version 1,21 - 03-Jan-2023 - revert to ${varname} inside preg_replace replacement strings (thanks dwhitemv)
+Version 1.21 - 03-Jan-2023 - revert to ${varname} inside preg_replace replacement strings (thanks dwhitemv)
+Version 1.22 - 08-Mar-2024 - fix issue when proxy is used for curl
 
 */
 global $Debug, $GMCVersion;
-$GMCVersion = 'get-metar-conditions-inc.php - Version 1.21 - 03-Jan-2023';
+$GMCVersion = 'get-metar-conditions-inc.php - Version 1.22 - 08-Mar-2024';
 //error_reporting(E_ALL);
 //ini_set('display_errors',1);
 if (isset($_REQUEST['sce']) && (strtolower($_REQUEST['sce']) == 'view' or strtolower($_REQUEST['sce']) == 'show')) {
@@ -171,9 +172,10 @@ function mtr_conditions($icao, $curtime = '', $sunrise = '', $sunset = '', $useJ
     else {
       $WhereLoaded = "from URL $metarURL";
       $rawhtml = mtr_fetchUrlWithoutHanging($metarURL);
-      $i = strpos($rawhtml, "\r\n\r\n");
-      $headers = substr($rawhtml, 0, $i - 1);
-      $content = substr($rawhtml, $i + 2);
+      $stuff = explode("\r\n\r\n",$rawhtml); // maybe we have more than one header due to redirects.
+      $content = (string)array_pop($stuff); // last one is the content
+      $headers = (string)array_pop($stuff); // next-to-last-one is the headers
+      $rawhtml = $headers."\r\n\r\n".$content; //reconstitute non-proxy return
       $RC = '';
       if (preg_match("|^HTTP\/\S+ (.*)\r\n|", $rawhtml, $matches)) {
         $RC = trim($matches[1]);
