@@ -76,10 +76,11 @@ Version 1.19 - 01-Feb-2021 - corrected code for Ice Pellets from 'PE' to 'PL' (t
 Version 1.20 - 27-Dec-2022 - fixes for PHP 8.2
 Version 1.21 - 03-Jan-2023 - revert to ${varname} inside preg_replace replacement strings (thanks dwhitemv)
 Version 1.22 - 08-Mar-2024 - fix issue when proxy is used for curl
+Version 1.23 - 21-May-2026 - fixes for PHP 8.5+
 
 */
 global $Debug, $GMCVersion;
-$GMCVersion = 'get-metar-conditions-inc.php - Version 1.22 - 08-Mar-2024';
+$GMCVersion = 'get-metar-conditions-inc.php - Version 1.23 - 21-May-2026';
 //error_reporting(E_ALL);
 //ini_set('display_errors',1);
 if (isset($_REQUEST['sce']) && (strtolower($_REQUEST['sce']) == 'view' or strtolower($_REQUEST['sce']) == 'show')) {
@@ -421,13 +422,13 @@ function mtr_fetchUrlWithoutHanging($url, $useFopen = false)
 
     // $Debug .= "<!-- curl info\n".print_r($cinfo,true)." -->\n";
 
-    curl_close($ch); // close the cURL session
+    if(PHP_MAJOR_VERSION < 8) {curl_close($ch);} // close the cURL session
 
     // $Debug .= "<!-- raw data\n".$data."\n -->\n";
 
-    $i = strpos($data, "\r\n\r\n");
-    $headers = substr($data, 0, $i);
-    $content = substr($data, $i + 4);
+    $stuff = explode("\r\n\r\n",$data); // maybe we have more than one header due to redirects.
+    $content = (string)array_pop($stuff); // last one is the content
+    $headers = (string)array_pop($stuff); // next-to-last-one is the headers
     if ($cinfo['http_code'] <> '200') {
       $Debug.= "<!-- headers returned:\n" . $headers . "\n -->\n";
     }
@@ -893,7 +894,7 @@ function mtr_get_wind($part)
       preg_match('/([0-9]{3}|VRB)([0-9]{2,3})G?([0-9]{2,3})?/', $part, $pieces);
       if ($pieces[1] == 'VRB') $direction = 'varies';
       else {
-        $angle = (integer)$pieces[1];
+        $angle = (int)$pieces[1];
         static $compass = array(
           'N',
           'NNE',
@@ -1259,7 +1260,7 @@ function mtr_get_cloud_cover($part)
   else {
     if (preg_match('/^([A-Z]{2,3})([0-9]{3})/', $part, $pieces)) { // codes for CB and TCU are ignored
       $mtrInfo['CLOUDS'] = $cloudCode[$pieces[1]];
-      $altitude = (integer)100 * $pieces[2]; // units are feet
+      $altitude = (int)100 * $pieces[2]; // units are feet
       $altitudeM = round($altitude / 3.28084);
       if (!isset($mtrInfo['CLOUD-DETAILS'])) {
         $mtrInfo['CLOUD-DETAILS'] = '';
@@ -1318,7 +1319,7 @@ function mtr_get_wind_chill($tempF)
 
   if (isset($mtrInfo['WINDMPH']) and $tempF < 51 && $mtrInfo['WINDMPH'] !== 'calm') {
     $pieces = explode(' ', $mtrInfo['WINDMPH']);
-    $windspeed = (integer)$pieces[2]; // wind speed must be in mph
+    $windspeed = (int)$pieces[2]; // wind speed must be in mph
     if ($windspeed > 3) {
       $chillF = 35.74 + 0.6215 * $tempF - 35.75 * pow($windspeed, 0.16) + 0.4275 * $tempF * pow($windspeed, 0.16);
       $chillF = round($chillF);
@@ -1347,7 +1348,7 @@ function mtr_get_temperature($part)
   global $lang, $Debug, $mtrInfo, $metarPtr, $group, $UOMS;
   if (preg_match('/^(M?[0-9]{2})\/(M?[0-9]{2}|[X]{2})?$/', $part, $pieces)) {
     $doMetric = preg_match('|C|', $UOMS['TEMP']);
-    $tempC = (integer)strtr($pieces[1], 'M', '-');
+    $tempC = (int)strtr($pieces[1], 'M', '-');
     $tempF = round(1.8 * $tempC + 32);
     if (!$doMetric) {
       $mtrInfo['TEMP'] = $tempF . "&deg;F (" . $tempC . "&deg;C)";
@@ -1358,7 +1359,7 @@ function mtr_get_temperature($part)
 
     mtr_get_wind_chill($tempF);
     if (isset($pieces[2]) and strlen($pieces[2]) != 0 && $pieces[2] != 'XX') {
-      $dewC = (integer)strtr($pieces[2], 'M', '-');
+      $dewC = (int)strtr($pieces[2], 'M', '-');
       $dewF = round(1.8 * $dewC + 32);
       if (!$doMetric) {
         $mtrInfo['DEWPT'] = $dewF . "&deg;F (" . $dewC . "&deg;C)";
@@ -1404,7 +1405,7 @@ function mtr_get_altimeter($part)
       $pressureHPA = round($pressureIN / 0.02953, 1);
     }
     else {
-      $pressureHPA = (integer)$pieces[2]; // units are hectoPascals
+      $pressureHPA = (int)$pieces[2]; // units are hectoPascals
       $pressureIN = round(0.02953 * $pressureHPA, 2); // convert to inches Hg
     }
 
